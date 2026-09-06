@@ -139,6 +139,9 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .wx-cell .pp{font-size:10px; opacity:.85; margin-top:3px; letter-spacing:.02em}
 .wx-foot{position:relative; margin-top:13px; font-size:11px; opacity:.8; line-height:1.5; display:flex; flex-wrap:wrap; gap:4px 10px}
 .wx-mini{font-family:var(--font-sans); font-size:11px; font-weight:600; color:inherit; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3); border-radius:999px; padding:2px 9px; cursor:pointer}
+.wx-diag{display:block; width:100%; margin-top:10px; font-size:11.5px; line-height:1.7; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.22); border-radius:12px; padding:11px 12px; word-break:break-all}
+.wx-diag b{font-weight:700; opacity:.85}
+.wx-diag-hi{background:rgba(255,255,255,.16); border-radius:9px; padding:9px 10px; margin-bottom:9px; line-height:1.65}
 .doline .wxn{font-size:13px; margin-top:3px; display:flex; gap:5px; align-items:flex-start}
 .doline .wxn.rain{color:var(--water)}
 .doline .wxn.dryhot{color:var(--feed)}
@@ -281,6 +284,14 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .pcard .meta .one{font-size:12.5px; color:var(--ink-soft); margin-top:7px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 .pcard .state{display:flex; gap:5px; flex-wrap:wrap; padding:0 13px 12px}
 .pcard.inmine::after{content:"✓ 我的"; position:absolute; top:9px; right:9px; font-size:10.5px; font-weight:700; color:#fff; background:var(--primary); padding:3px 8px; border-radius:999px}
+
+/* 新增植物快速卡 */
+.pcard.addcard{border:1.5px dashed var(--primary); background:var(--primary-soft); display:flex; align-items:center; justify-content:center; padding:24px 12px; box-shadow:none}
+.pcard.addcard:hover{background:var(--primary-soft); border-color:var(--primary-deep); transform:translateY(-3px)}
+.add-in{text-align:center; color:var(--primary-deep); width:100%}
+.add-plus{font-size:34px; line-height:1; font-weight:300; color:var(--primary)}
+.add-t{font-family:var(--font-serif); font-size:16.5px; font-weight:700; margin-top:9px}
+.add-s{font-size:12.5px; color:var(--ink-soft); margin-top:3px}
 
 /* filter chips */
 .chips{display:flex; gap:8px; overflow-x:auto; padding:4px 2px 14px; margin:0 -2px; scrollbar-width:none}
@@ -517,7 +528,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
 
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
-    <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網與中央氣象署資料，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
+    <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
   </div>
 </main>
 
@@ -585,13 +596,13 @@ const FLOWER_HEX = {red:'#D24B4B',pink:'#E68CA8',white:'#F4F1E6',yellow:'#EAC24C
 const COLOR_LABEL = {red:'紅',pink:'粉',white:'白',yellow:'黃',orange:'橙',purple:'紫',blue:'藍',green:'綠'};
 
 /* ---------- 近日天氣預報（每天自動更新；台北內湖） ----------
-   資料由每日排程從中央氣象署／Yahoo・Ventusky 綜合後重新發布。
+   即時資料由網頁直接向 Open-Meteo 取得；此區為連線失敗時的離線備份。
    下方 FORECAST 區塊會被自動更新，勿手動更改格式。 */
 /*FORECAST_START*/
 const FORECAST={
   loc:'台北市內湖區',
   updated:'2026-09-03',
-  src:'中央氣象署 · Yahoo 綜合',
+  src:'Open-Meteo',
   days:[
     {d:'2026-09-03',hi:30,lo:27,pop:60,fl:31,cond:'短暫陣雨',feel:'今天有雨、先別澆水'},
     {d:'2026-09-04',hi:32,lo:27,pop:50,fl:35,cond:'午後雷陣雨'},
@@ -629,55 +640,91 @@ function wmoCond(c){
   if(c>=96) return '雷雨冰雹';
   return '多雲';
 }
-let WX_FETCHING=false; let WX_ERR='';
+let WX_FETCHING=false, WX_ERR='', WX_LOG=[], WX_TRIES=0;
+/* 三條路徑輪流試：直連 → 兩個公開 CORS 代理。任一條成功就停。 */
+function wxSources(){
+  const u=WX_API;
+  return [
+    {n:'直連 Open-Meteo', u:u},
+    {n:'代理 allorigins', u:'https://api.allorigins.win/raw?url='+encodeURIComponent(u)},
+    {n:'代理 codetabs',   u:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u)},
+    {n:'代理 corsproxy',  u:'https://corsproxy.io/?url='+encodeURIComponent(u)}
+  ];
+}
+function applyWx(j,srcName){
+  const d=j.daily;
+  if(!d||!d.time||!d.time.length) throw new Error('回應缺少 daily 欄位');
+  FORECAST.days=d.time.map((t,i)=>({
+    d:t,
+    hi:Math.round(d.temperature_2m_max[i]),
+    lo:Math.round(d.temperature_2m_min[i]),
+    pop:Math.round(d.precipitation_probability_max[i]==null?0:d.precipitation_probability_max[i]),
+    fl:Math.round(d.apparent_temperature_max[i]==null?d.temperature_2m_max[i]:d.apparent_temperature_max[i]),
+    cond:wmoCond(d.weather_code[i])
+  }));
+  FORECAST.updated=d.time[0];
+  FORECAST.src='Open-Meteo 即時';
+  FORECAST.live=true;
+  FORECAST.via=srcName;
+  if(j.current){
+    FORECAST.now={
+      temp:Math.round(j.current.temperature_2m),
+      fl:Math.round(j.current.apparent_temperature),
+      cond:wmoCond(j.current.weather_code),
+      at:String(j.current.time).slice(11,16)
+    };
+  }
+}
+async function tryFetch(url,ms){
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),ms);
+  try{
+    const r=await fetch(url,{cache:'no-store',signal:ctl.signal});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const txt=await r.text();
+    let j; try{ j=JSON.parse(txt); }catch(_){ throw new Error('回應不是 JSON'); }
+    return j;
+  } finally { clearTimeout(to); }
+}
 async function liveWeather(){
-  if(WX_FETCHING) return; WX_FETCHING=true;
-  if(location.protocol==='file:'){
-    FORECAST.live=false; WX_ERR='這是本機檔案（file://），瀏覽器禁止對外連線。請改開 https 網址。';
+  if(WX_FETCHING) return; WX_FETCHING=true; WX_LOG=[];
+  if(location.protocol!=='https:' && location.protocol!=='http:'){
+    FORECAST.live=false; FORECAST.localfile=true;
+    WX_ERR='目前是以「本機檔案」開啟（'+location.protocol+'），瀏覽器禁止對外連線，天氣永遠不會更新。';
+    WX_LOG.push('本機檔案（'+location.protocol+'）— 未嘗試連線');
     WX_FETCHING=false; try{ refreshAll(); }catch(_){} return;
   }
-  try{
-    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),8000);
-    const r=await fetch(WX_API,{cache:'no-store',signal:ctl.signal});
-    clearTimeout(to);
-    if(!r.ok) throw new Error('http');
-    const j=await r.json();
-    const d=j.daily;
-    if(!d||!d.time||!d.time.length) throw new Error('empty');
-    FORECAST.days=d.time.map((t,i)=>({
-      d:t,
-      hi:Math.round(d.temperature_2m_max[i]),
-      lo:Math.round(d.temperature_2m_min[i]),
-      pop:Math.round(d.precipitation_probability_max[i]==null?0:d.precipitation_probability_max[i]),
-      fl:Math.round(d.apparent_temperature_max[i]==null?d.temperature_2m_max[i]:d.apparent_temperature_max[i]),
-      cond:wmoCond(d.weather_code[i])
-    }));
-    FORECAST.updated=d.time[0];
-    FORECAST.src='Open-Meteo 即時觀測';
-    FORECAST.live=true;
-    if(j.current){
-      FORECAST.now={
-        temp:Math.round(j.current.temperature_2m),
-        fl:Math.round(j.current.apparent_temperature),
-        cond:wmoCond(j.current.weather_code),
-        at:String(j.current.time).slice(11,16)
-      };
+  FORECAST.localfile=false;
+  for(const s of wxSources()){
+    try{
+      const j=await tryFetch(s.u,9000);
+      applyWx(j,s.n);
+      WX_ERR=''; WX_LOG.push(s.n+' → 成功');
+      WX_FETCHING=false; WX_TRIES=0;
+      try{ refreshAll(); }catch(_){}
+      return;
+    }catch(e){
+      const msg=(e&&e.name==='AbortError')?'逾時 9 秒':((e&&e.message)||'未知錯誤');
+      WX_LOG.push(s.n+' → 失敗（'+msg+'）');
     }
-    refreshAll();
-  }catch(e){
-    FORECAST.live=false;
-    WX_ERR = (e&&e.name==='AbortError') ? '連線逾時（8 秒無回應）'
-           : (e&&e.message) ? (e.name+': '+e.message) : '未知錯誤';
-    try{ refreshAll(); }catch(_){}
-  }finally{ WX_FETCHING=false; }
+  }
+  FORECAST.live=false;
+  WX_ERR='三條路徑都失敗';
+  WX_FETCHING=false;
+  try{ refreshAll(); }catch(_){}
+  /* 自動重試：3s → 15s → 60s → 5 分鐘，不需要按任何按鈕 */
+  WX_TRIES++;
+  const wait=[3000,15000,60000,300000][Math.min(WX_TRIES-1,3)];
+  setTimeout(()=>liveWeather(), wait);
 }
-/* 開頁抓一次、每 30 分鐘抓一次、切回分頁超過 20 分鐘再抓一次 */
+/* 開頁抓、每 15 分鐘抓、切回分頁或恢復網路時再抓 */
 let WX_LAST=0;
-function liveWeatherTick(){ WX_LAST=Date.now(); liveWeather(); }
+function liveWeatherTick(){ WX_LAST=Date.now(); WX_TRIES=0; liveWeather(); }
 document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden && Date.now()-WX_LAST>20*60*1000) liveWeatherTick();
+  if(!document.hidden && Date.now()-WX_LAST>10*60*1000) liveWeatherTick();
 });
-setInterval(()=>liveWeatherTick(),30*60*1000);
+window.addEventListener('online',()=>liveWeatherTick());
+window.addEventListener('focus',()=>{ if(Date.now()-WX_LAST>10*60*1000) liveWeatherTick(); });
+setInterval(()=>liveWeatherTick(),15*60*1000);
 
 function wxKind(cond,pop){
   if(/雷/.test(cond)) return 'storm';
@@ -1227,11 +1274,21 @@ function renderWeatherHero(wx,m){
      <div class="wx-cond">${wxSVG(wxKind(t.cond,t.pop))}<span>今日 ${t.cond}・降雨機率 ${t.pop}%</span></div>
      ${FORECAST.now?`<div class="wx-sub">此刻 ${FORECAST.now.temp}°・體感 ${FORECAST.now.fl}°・${FORECAST.now.cond}</div>`:''}
      <div class="wx-advice">${WX_ADVICE[wx.sig]}</div>
-     <div class="wx-trendwrap"><div class="wx-trendcap">未來 5 天趨勢</div>${wxTrend(next5)}</div>
-     <div class="wx-foot"><span>更新 ${FORECAST.now?(FORECAST.now.at+' 實測'):fmtMD(wx.updated)}・${wx.src||'中央氣象署'}</span>
-       <span>${FORECAST.live?'即時連線正常':'⚠️ 抓取失敗，顯示離線備份'}</span>
+     ${next5.length?`<div class="wx-trendwrap"><div class="wx-trendcap">未來 ${next5.length} 天趨勢${(!FORECAST.live&&next5.length<5)?`<span style="opacity:.7">（離線備份僅剩 ${next5.length} 天）</span>`:''}</div>${wxTrend(next5)}</div>`:`<div class="wx-trendwrap"><div class="wx-trendcap">離線備份資料已用完，暫時無法顯示趨勢</div></div>`}
+     <div class="wx-foot"><span>更新 ${FORECAST.now?(FORECAST.now.at+' 實測'):fmtMD(wx.updated)}・${wx.src||'Open-Meteo'}</span>
+       <span>${FORECAST.live?('即時連線正常'+(FORECAST.via&&FORECAST.via.indexOf('代理')===0?'（經代理）':'')):'⚠️ 抓取失敗，自動重試中'}</span>
        <button class="wx-mini" data-wxretry>↻ 重新抓取</button>
-       ${FORECAST.live?'':`<button class="wx-mini" data-wxdiag>查看原因</button>`}</div>`;
+       ${FORECAST.live?'':`<button class="wx-mini" data-wxdiag>顯示／收合原因</button>`}</div>
+     ${FORECAST.live?'':`<div class="wx-diag" id="wxDiag">
+        ${FORECAST.localfile?`<div class="wx-diag-hi">⚠️ 你現在開的是「本機檔案」，不是網站。<br>天氣一定抓不到，請改用下面這個網址開啟：<br><b>https://jchen7202-blip.github.io/Graciegarden/</b></div>`:''}
+        <div><b>協定</b>　${location.protocol}</div>
+        <div><b>網域</b>　${location.host||'（無，本機檔案）'}</div>
+        <div style="margin-top:6px"><b>請求網址</b><br>${WX_API}</div>
+        <div style="margin-top:6px"><b>各路徑結果</b></div>
+        <div>${WX_LOG.length?WX_LOG.join('<br>'):'（尚未嘗試）'}</div>
+        <div style="margin-top:6px"><b>狀態</b>　${WX_ERR||'-'}</div>
+        <div style="margin-top:6px; opacity:.85">若三條路徑都失敗，多半是廣告攔截／防護擴充功能、公司或校園網路、DNS 擋掉了請求。可用無痕視窗測試。</div>
+      </div>`}`;
 }
 function renderSeason(m){
   const wx=weatherContext();
@@ -1384,7 +1441,11 @@ function renderGarden(){
         <button class="btn btn-primary" data-go="library">＋ 加入植物</button></div></div>`;
     return;
   }
-  wrap.innerHTML=`<div class="garden-head"><button class="btn-cal-export" data-calexport>📅 匯出成手機日曆提醒</button></div><div class="grid">`+ids.map(id=>{
+  const addCard=`<button class="pcard addcard" data-go="library" aria-label="新增植物">
+      <div class="add-in"><div class="add-plus">＋</div>
+        <div class="add-t">新增植物</div>
+        <div class="add-s">到圖鑑挑選</div></div></button>`;
+  wrap.innerHTML=`<div class="garden-head"><button class="btn-cal-export" data-calexport>📅 匯出成手機日曆提醒</button></div><div class="grid">`+addCard+ids.map(id=>{
     const p=PLANT_BY_ID[id]; if(!p) return '';
     return `<button class="pcard inmine" data-open="${id}">
       <div class="top"><span class="cat">${p.cat}</span>${plantImg(p)}</div>
@@ -1446,7 +1507,7 @@ function openSheet(id){
       <div class="dsec"><div class="h"><span class="di fe">🌿</span><h4>怎麼施肥</h4></div><p>${p.fmethod}</p>${fertTimeline(p)}<ul style="margin-top:10px">${fertList}</ul></div>
       ${tips?`<div class="dsec"><div class="h"><span class="di tp">💡</span><h4>小提醒</h4></div><ul>${tips}</ul>${p.caution?`<div class="callout warn" style="margin-top:10px"><b>注意：</b>${p.caution}</div>`:''}</div>`:''}
       ${logInfo}
-      <div class="src">資料來源：${p.src}；台北氣候參考中央氣象署。照護為一般通則，請依植物實際狀態與品種微調。</div>
+      <div class="src">資料來源：${p.src}；台北氣候與即時天氣參考 Open-Meteo。照護為一般通則，請依植物實際狀態與品種微調。</div>
     </div>
     <div class="dcta">${mine
       ? `<button class="btn btn-soft" data-remove="${id}">移出花園</button><button class="btn btn-primary" id="sheetDone">完成</button>`
@@ -1711,11 +1772,8 @@ function init(){
     if(!t) return;
     if(t.dataset.wxretry!==undefined){ toast('重新抓取中…'); liveWeatherTick(); return; }
     if(t.dataset.wxdiag!==undefined){
-      alert('天氣抓取診斷\n\n目前網址協定：'+location.protocol
-        +'\n來源網址：'+location.host
-        +'\n請求：'+WX_API.slice(0,64)+'…'
-        +'\n\n失敗原因：'+(WX_ERR||'（尚未嘗試）')
-        +'\n\n若顯示 file:// 或 TypeError，通常代表沒有用 https 網址開啟，或網路／瀏覽器擋掉了跨網域請求。');
+      const box=document.getElementById('wxDiag');
+      if(box){ box.style.display = box.style.display==='block' ? 'none' : 'block'; }
       return;
     }
     if(t.dataset.tab){ switchTab(t.dataset.tab); return; }
