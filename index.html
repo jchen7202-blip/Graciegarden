@@ -67,6 +67,7 @@ header.site{padding-top:env(safe-area-inset-top)}
   transition:background .15s, color .15s, border-color .15s;
 }
 .icon-btn:hover{background:var(--surface-2); color:var(--primary)}
+.ver{margin-top:10px; font-size:11.5px; letter-spacing:.08em; color:var(--ink-faint); opacity:.75; font-variant-numeric:tabular-nums}
 
 svg, img, canvas{max-width:100%}
 .wx-trend{width:100%; height:auto; display:block}
@@ -293,6 +294,34 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .add-t{font-family:var(--font-serif); font-size:16.5px; font-weight:700; margin-top:9px}
 .add-s{font-size:12.5px; color:var(--ink-soft); margin-top:3px}
 
+/* 我的花園：就地新增植物面板 */
+.gadd{border:1px solid var(--border); background:var(--surface); border-radius:18px; padding:16px 15px 12px; margin:0 0 16px; box-shadow:0 4px 16px var(--shadow)}
+.gadd-h{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px}
+.gadd-h .icon-btn{flex:none; width:34px; height:34px; font-size:15px}
+.gadd-t{font-family:var(--font-serif); font-weight:700; font-size:18px}
+.gadd-s{font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.45}
+.gadd .search{margin-bottom:10px; box-shadow:none}
+.gadd .chips{padding:2px 2px 10px}
+.ga-list{max-height:min(58vh,470px); overflow-y:auto; -webkit-overflow-scrolling:touch; margin:0 -3px; padding:0 3px}
+.garow{display:flex; align-items:center; gap:11px; padding:9px 3px; border-top:1px solid var(--border-soft)}
+.garow:first-child{border-top:none}
+.garow .th{position:relative; width:52px; height:52px; flex:none; border-radius:12px; overflow:hidden; background:var(--surface-2); cursor:pointer}
+.garow .th svg,.garow .th img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.garow .tx{flex:1; min-width:0; cursor:pointer}
+.garow .tx .nm{font-family:var(--font-serif); font-weight:700; font-size:15.5px; display:flex; align-items:center; gap:6px}
+.garow .tx .one{font-size:12px; color:var(--ink-faint); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ga-btn{flex:none; border:1px solid var(--primary); background:var(--primary); color:#fff; border-radius:999px; padding:8px 15px; font-size:13.5px; font-weight:700; font-family:var(--font-sans); cursor:pointer; transition:.15s}
+.ga-btn:hover{background:var(--primary-deep)}
+.ga-in{flex:none; font-size:12.5px; font-weight:700; color:var(--primary); background:var(--primary-soft); border-radius:999px; padding:7px 12px}
+.ga-empty{padding:18px 3px; font-size:13.5px; color:var(--ink-soft); line-height:1.6}
+
+/* 卡片右上角快速加入 */
+.pcell{position:relative}
+.pcell>.pcard{display:block; width:100%; height:100%}
+.qadd{position:absolute; top:8px; right:8px; z-index:2; width:32px; height:32px; border-radius:999px; border:1px solid var(--border-soft); background:color-mix(in srgb,var(--surface) 90%,transparent); color:var(--primary); font-size:19px; line-height:1; font-family:var(--font-sans); cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); box-shadow:0 2px 6px var(--shadow); transition:.16s}
+.qadd:hover{background:var(--primary); color:#fff; border-color:var(--primary)}
+.pcell:hover .qadd{transform:translateY(-3px)}
+
 /* filter chips */
 .chips{display:flex; gap:8px; overflow-x:auto; padding:4px 2px 14px; margin:0 -2px; scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
@@ -503,7 +532,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <section class="view" id="view-garden" aria-label="我的花園">
     <p class="eyebrow">我的花園</p>
     <h2 class="section">花園裡的植物</h2>
-    <p class="section-sub">你加入的植物會存在這個裝置上，隨時可以打勾記錄澆水、施肥。</p>
+    <p class="section-sub">你加入的植物會存在這個裝置上，隨時可以打勾記錄澆水、施肥。點「＋ 新增植物」可直接在這裡加入。</p>
     <div id="gardenWrap"></div>
   </section>
 
@@ -511,7 +540,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <section class="view" id="view-library" aria-label="加入植物">
     <p class="eyebrow">植物圖鑑</p>
     <h2 class="section">加入植物</h2>
-    <p class="section-sub">搜尋或瀏覽下方植物，點一下看照顧方式、加進 Grace 的花園。圖片為 AI 示意圖。</p>
+    <p class="section-sub">點卡片右上角的「＋」可直接加入花園；點卡片本身看完整照顧方式。圖片為 AI 示意圖。</p>
     <input class="search" id="libSearch" type="search" inputmode="search" autocomplete="off" placeholder="🔍 搜尋植物名稱（例：玫瑰、桂花、金桔…）">
     <div class="chips" id="libFilter"></div>
     <div class="grid" id="libGrid"></div>
@@ -529,6 +558,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609070551</div><!--BUILD_END-->
   </div>
 </main>
 
@@ -1359,8 +1389,8 @@ function renderTodo(m){
   if(ids.length===0){
     wrap.innerHTML = `<div class="todo-head"><h3>本週待辦</h3></div>
     <div class="empty"><svg viewBox="0 0 100 100">${'<circle cx="50" cy="50" r="46" fill="var(--primary-soft)"/><path d="M50 74V40" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"/><path d="M50 44c-4-6-2-12 4-16 2 6 0 12-4 16Z" fill="var(--bloom)"/><path d="M50 54c-5-2-11 1-13 7 6 2 11-1 13-7Z" fill="var(--primary)"/><path d="M50 52c5-2 11 1 13 7-6 2-11-1-13-7Z" fill="var(--primary-deep)"/>'}</svg>
-      <h3>還沒有植物</h3><p>到「圖鑑」搜尋、加入 Grace 花園裡的植物，這裡就會列出每週要做的事。</p>
-      <button class="btn btn-primary" data-go="library">＋ 加入植物</button></div>`;
+      <h3>還沒有植物</h3><p>加入 Grace 花園裡的植物，這裡就會列出每週要做的事。</p>
+      <button class="btn btn-primary" data-gadd>＋ 新增植物</button></div>`;
     return;
   }
   const now=curMonth();
@@ -1432,26 +1462,69 @@ function stateChips(id){
   else chips.push(`<span class="pill ok">💧 ${agoText(g.water[g.water.length-1])}澆過</span>`);
   return chips.join(' ');
 }
+/* 我的花園：就地新增植物 */
+let gAdd={open:false,q:'',cat:'全部'};
+function gardenAddPanel(){
+  if(!gAdd.open) return '';
+  return `<div class="gadd" id="gaddPanel">
+    <div class="gadd-h">
+      <div><div class="gadd-t">新增植物</div>
+        <div class="gadd-s">搜尋或挑選，點「＋ 加入」直接放進花園；點名字或照片可先看照顧方式。</div></div>
+      <button class="icon-btn" data-gaclose aria-label="收起">✕</button></div>
+    <input class="search" id="gaSearch" type="search" inputmode="search" autocomplete="off" placeholder="🔍 搜尋植物名稱（例：玫瑰、桂花、金桔…）">
+    <div class="chips" id="gaChips">`+CATS.map(c=>`<button class="chip ${c===gAdd.cat?'on':''}" data-gacat="${c}">${c}</button>`).join('')+`</div>
+    <div class="ga-list" id="gaList"></div>
+  </div>`;
+}
+function gardenAddList(){
+  const el=$('#gaList'); if(!el) return;
+  const q=gAdd.q.trim().toLowerCase();
+  let list=PLANTS.filter(p=>gAdd.cat==='全部'||p.cat===gAdd.cat);
+  if(q) list=list.filter(p=>(p.name+' '+p.alias+' '+p.one+' '+((p.idf&&p.idf.note)||'')).toLowerCase().includes(q));
+  el.innerHTML = list.length ? list.map(p=>{
+    const mine=inMine(p.id);
+    return `<div class="garow">
+      <div class="th" data-open="${p.id}">${plantImg(p)}</div>
+      <div class="tx" data-open="${p.id}"><div class="nm">${p.name}<span class="pill ghost" style="font-weight:500">${p.cat}</span></div>
+        <div class="one">${p.one}</div></div>
+      ${mine?'<span class="ga-in">✓ 已加入</span>':`<button class="ga-btn" data-quickadd="${p.id}">＋ 加入</button>`}</div>`;
+  }).join('') : `<div class="ga-empty">找不到符合的植物。這株可能還沒收錄，先加最接近的，或把名字告訴 John，會依專業資料補上照護方式。</div>`;
+}
+function openGardenAdd(){
+  switchTab('garden');
+  gAdd.open=true; renderGarden();
+  const el=$('#gaddPanel'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+}
 function renderGarden(){
+  const keepFocus = document.activeElement && document.activeElement.id==='gaSearch';
   const ids=Object.keys(STATE.garden); const wrap=$('#gardenWrap');
+  let html=gardenAddPanel();
   if(ids.length===0){
-    wrap.innerHTML=`<div class="empty"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="var(--primary-soft)"/><path d="M34 66h32M40 66V50a10 10 0 0120 0v16" stroke="var(--primary)" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="50" cy="40" r="6" fill="var(--bloom)"/></svg>
-      <h3>花園還是空的</h3><p>到「圖鑑」搜尋植物名稱、加入 Grace 花園裡的植物，就能開始記錄照護。</p>
+    if(!gAdd.open){
+      html+=`<div class="empty"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="var(--primary-soft)"/><path d="M34 66h32M40 66V50a10 10 0 0120 0v16" stroke="var(--primary)" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="50" cy="40" r="6" fill="var(--bloom)"/></svg>
+      <h3>花園還是空的</h3><p>加入 Grace 花園裡的植物，就能開始記錄照護。</p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary" data-go="library">＋ 加入植物</button></div></div>`;
-    return;
-  }
-  const addCard=`<button class="pcard addcard" data-go="library" aria-label="新增植物">
+        <button class="btn btn-primary" data-gadd>＋ 新增植物</button></div></div>`;
+    }
+  } else {
+    const addCard=`<button class="pcard addcard" data-gadd aria-label="新增植物">
       <div class="add-in"><div class="add-plus">＋</div>
         <div class="add-t">新增植物</div>
-        <div class="add-s">到圖鑑挑選</div></div></button>`;
-  wrap.innerHTML=`<div class="garden-head"><button class="btn-cal-export" data-calexport>📅 匯出成手機日曆提醒</button></div><div class="grid">`+addCard+ids.map(id=>{
-    const p=PLANT_BY_ID[id]; if(!p) return '';
-    return `<button class="pcard inmine" data-open="${id}">
-      <div class="top"><span class="cat">${p.cat}</span>${plantImg(p)}</div>
-      <div class="meta"><div class="nm">${p.name}</div><div class="al">${p.sun}</div></div>
-      <div class="state">${stateChips(id)}</div></button>`;
-  }).join('')+`</div>`;
+        <div class="add-s">在這裡直接挑選</div></div></button>`;
+    html+=`<div class="garden-head"><button class="btn-cal-export" data-calexport>📅 匯出成手機日曆提醒</button></div><div class="grid">`+addCard+ids.map(id=>{
+      const p=PLANT_BY_ID[id]; if(!p) return '';
+      return `<button class="pcard inmine" data-open="${id}">
+        <div class="top"><span class="cat">${p.cat}</span>${plantImg(p)}</div>
+        <div class="meta"><div class="nm">${p.name}</div><div class="al">${p.sun}</div></div>
+        <div class="state">${stateChips(id)}</div></button>`;
+    }).join('')+`</div>`;
+  }
+  wrap.innerHTML=html;
+  if(gAdd.open){
+    const s=$('#gaSearch');
+    if(s){ s.value=gAdd.q; if(keepFocus){ s.focus(); const v=s.value; s.value=''; s.value=v; } }
+    gardenAddList();
+  }
 }
 
 /* ---------- 圖鑑 ---------- */
@@ -1463,9 +1536,13 @@ function renderLibrary(){
   const q=libQuery.trim().toLowerCase();
   let list=PLANTS.filter(p=>libCat==='全部'||p.cat===libCat);
   if(q) list=list.filter(p=>(p.name+' '+p.alias+' '+p.one+' '+((p.idf&&p.idf.note)||'')).toLowerCase().includes(q));
-  $('#libGrid').innerHTML=list.map(p=>`<button class="pcard ${inMine(p.id)?'inmine':''}" data-open="${p.id}">
-    <div class="top"><span class="cat">${p.cat}</span>${plantImg(p)}</div>
-    <div class="meta"><div class="nm">${p.name}</div><div class="one">${p.one}</div></div></button>`).join('');
+  $('#libGrid').innerHTML=list.map(p=>{
+    const mine=inMine(p.id);
+    return `<div class="pcell"><button class="pcard ${mine?'inmine':''}" data-open="${p.id}">
+      <div class="top"><span class="cat">${p.cat}</span>${plantImg(p)}</div>
+      <div class="meta"><div class="nm">${p.name}</div><div class="one">${p.one}</div></div></button>`
+      +(mine?'':`<button class="qadd" data-quickadd="${p.id}" aria-label="加入我的花園：${p.name}" title="加入我的花園">＋</button>`)+`</div>`;
+  }).join('');
   const empty=$('#libEmpty');
   if(empty) empty.innerHTML = list.length?'' : `<div class="empty" style="margin-top:6px"><h3>找不到${libQuery?'「'+libQuery.trim()+'」':'植物'}</h3><p>這株可能還沒收錄。先加最接近的，或把名字告訴 John，會依專業資料補上照護方式。</p></div>`;
 }
@@ -1768,7 +1845,7 @@ function init(){
   renderGarden(); renderLibFilter(); renderLibrary(); renderFert();
 
   document.addEventListener('click',e=>{
-    const t=e.target.closest('[data-tab],[data-go],[data-open],[data-add],[data-remove],[data-log],[data-waterall],[data-calexport],[data-cat],[data-form],[data-color],[data-feat],[data-wxretry],[data-wxdiag],#wNext,#wBack,#wResult,#wRestart,#idWizard,#idBackCam,#sheetClose,#sheetDone');
+    const t=e.target.closest('[data-tab],[data-go],[data-open],[data-add],[data-quickadd],[data-gadd],[data-gaclose],[data-gacat],[data-remove],[data-log],[data-waterall],[data-calexport],[data-cat],[data-form],[data-color],[data-feat],[data-wxretry],[data-wxdiag],#wNext,#wBack,#wResult,#wRestart,#idWizard,#idBackCam,#sheetClose,#sheetDone');
     if(!t) return;
     if(t.dataset.wxretry!==undefined){ toast('重新抓取中…'); liveWeatherTick(); return; }
     if(t.dataset.wxdiag!==undefined){
@@ -1780,6 +1857,10 @@ function init(){
     if(t.dataset.go){ switchTab(t.dataset.go); return; }
     if(t.dataset.open){ openSheet(t.dataset.open); return; }
     if(t.dataset.add){ addPlant(t.dataset.add); closeSheet(); switchTab('garden'); return; }
+    if(t.dataset.quickadd){ addPlant(t.dataset.quickadd); return; }
+    if(t.dataset.gadd!==undefined){ openGardenAdd(); return; }
+    if(t.dataset.gaclose!==undefined){ gAdd.open=false; renderGarden(); return; }
+    if(t.dataset.gacat){ gAdd.cat=t.dataset.gacat; renderGarden(); return; }
     if(t.dataset.remove){ removePlant(t.dataset.remove); closeSheet(); return; }
     if(t.dataset.log){ logCare(t.dataset.id,t.dataset.log); return; }
     if(t.dataset.waterall!==undefined){ waterAll(); return; }
@@ -1799,6 +1880,7 @@ function init(){
   });
   document.addEventListener('input',e=>{
     if(e.target && e.target.id==='libSearch'){ libQuery=e.target.value; renderLibrary(); }
+    if(e.target && e.target.id==='gaSearch'){ gAdd.q=e.target.value; gardenAddList(); }
   });
   $('#scrim').addEventListener('click',e=>{ if(e.target===$('#scrim')) closeSheet(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
