@@ -36,20 +36,20 @@
 }
 
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable; overflow-x:hidden}
+html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable}
 
 body{
   margin:0; background:var(--bg); color:var(--ink);
   font-family:var(--font-sans); font-size:16.5px; line-height:1.7;
   -webkit-font-smoothing:antialiased; letter-spacing:.005em;
   padding-bottom:calc(92px + env(safe-area-inset-bottom));
-  overflow-x:hidden; max-width:100%;
+  overflow-x:clip; max-width:100%;
 }
 .app{max-width:var(--maxw); margin:0 auto; padding:0 16px}
 
 /* ---------- Header ---------- */
 header.site{
-  position:sticky; top:0; z-index:40;
+  position:-webkit-sticky; position:sticky; top:0; z-index:40;
   background:#FFFFFF;
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
   border-bottom:1px solid var(--border-soft);
@@ -559,7 +559,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609111634</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609111639</div><!--BUILD_END-->
   </div>
 </main>
 
