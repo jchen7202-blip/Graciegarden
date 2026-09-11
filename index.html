@@ -60,7 +60,13 @@ header.site{padding-top:env(safe-area-inset-top)}
 .brand .txt{min-width:0; text-align:center}
 .brand .en{font-family:var(--font-display); font-style:italic; font-weight:500; font-size:19px; line-height:1; color:var(--primary-deep); letter-spacing:.01em}
 .brand .en .wordmark{display:block; width:154px; height:auto; max-width:100%; margin:0 auto}
-.brand .zh{font-size:12px; color:var(--ink-90); letter-spacing:.14em; margin-top:3px}
+.brand .zh{font-size:12px; color:var(--ink-90); letter-spacing:.14em; margin-top:3px;
+  max-height:22px; overflow:hidden; transition:max-height .22s ease, opacity .18s ease, margin-top .22s ease}
+header.site.scrolled .brand .zh{max-height:0; opacity:0; margin-top:0}
+header.site{transition:box-shadow .2s ease}
+header.site.scrolled{box-shadow:0 2px 10px var(--shadow)}
+.site-in{transition:padding .22s ease}
+header.site.scrolled .site-in{padding-top:8px; padding-bottom:8px}
 .spacer{flex:1}
 .icon-btn{
   width:40px; height:40px; border-radius:50%; border:1px solid var(--border);
@@ -553,7 +559,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609111629</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609111634</div><!--BUILD_END-->
   </div>
 </main>
 
@@ -1883,6 +1889,20 @@ function init(){
   $('#scrim').addEventListener('click',e=>{ if(e.target===$('#scrim')) closeSheet(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
 }
+/* 捲動時收合副標，標題列維持固定 */
+(function(){
+  var h=document.querySelector('header.site'); if(!h) return;
+  var on=false, ticking=false;
+  function upd(){
+    ticking=false;
+    var y=window.pageYOffset||document.documentElement.scrollTop||0;
+    var next = on ? y>12 : y>28;   /* 加遲滯，避免臨界值抖動 */
+    if(next!==on){ on=next; h.classList.toggle('scrolled',on); }
+  }
+  window.addEventListener('scroll',function(){ if(!ticking){ ticking=true; requestAnimationFrame(upd); } },{passive:true});
+  upd();
+})();
+
 init();
 liveWeatherTick();
 
