@@ -375,7 +375,7 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .sheet{position:relative; width:100%; max-width:640px; max-height:92%; transform:translateY(100%); background:var(--bg); border-radius:24px 24px 0 0; box-shadow:0 -12px 40px var(--shadow-lg); overflow:hidden; display:flex; flex-direction:column; transition:transform .32s cubic-bezier(.2,.8,.2,1)}
 .sheet.show{transform:translateY(0)}
 .sheet-scroll{overflow-y:auto; -webkit-overflow-scrolling:touch}
-.sheet .hero{position:relative; padding:22px 20px 18px; background:linear-gradient(160deg,var(--surface-2),var(--bg-2)); border-bottom:1px solid var(--border-soft)}
+.sheet .hero{position:relative; padding:22px 28px 18px; background:linear-gradient(160deg,var(--surface-2),var(--bg-2)); border-bottom:1px solid var(--border-soft)}
 .sheet .grip{position:absolute; top:9px; left:50%; transform:translateX(-50%); width:42px; height:5px; border-radius:999px; background:var(--border)}
 .sheet .close{position:absolute; top:14px; right:14px}
 .sheet .hero-row{display:flex; gap:16px; align-items:center; margin-top:6px}
@@ -384,7 +384,7 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .sheet h2{font-family:var(--font-serif); font-size:25px; margin:0; font-weight:700; line-height:1.15}
 .sheet .al{color:var(--ink-faint); font-size:13.5px; margin-top:3px}
 .sheet .badges{display:flex; gap:7px; flex-wrap:wrap; margin-top:10px}
-.dbody{padding:18px 20px 26px; display:flex; flex-direction:column; gap:20px}
+.dbody{padding:18px 28px 28px; display:flex; flex-direction:column; gap:20px}
 .dsec .h{display:flex; align-items:center; gap:9px; margin:0 0 10px}
 .dsec .h .di{width:30px; height:30px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; flex:none; font-size:15px}
 .dsec .h h4{font-family:var(--font-serif); font-size:17px; margin:0; font-weight:700}
@@ -397,10 +397,10 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .di.tp{background:var(--primary-soft); color:var(--primary)}
 
 /* seasonal water table */
-.wtab{display:grid; grid-template-columns:repeat(5,1fr); gap:7px; margin-top:4px}
-.wcell{background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; padding:9px 8px; text-align:center}
+.wtab{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:4px}
+.wcell{background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; padding:9px 5px; text-align:center}
 .wcell .s{font-size:11.5px; color:var(--ink-faint); font-weight:600; letter-spacing:.04em}
-.wcell .drops{margin:5px 0 4px; font-size:12px; letter-spacing:1px; height:14px; color:var(--water)}
+.wcell .drops{margin:5px 0 4px; font-size:11px; letter-spacing:0; line-height:16px; height:16px; white-space:nowrap; color:var(--water)}
 .wcell .fq{font-size:11.5px; color:var(--ink-soft); line-height:1.3}
 .wcell.hot{border-color:color-mix(in srgb,var(--water) 40%,transparent); background:var(--water-soft)}
 
@@ -416,7 +416,7 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .dbody ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
 .dbody li{font-size:14.5px; line-height:1.6; color:var(--ink-soft)}
 .src{font-size:11.5px; color:var(--ink-faint); border-top:1px solid var(--border-soft); padding-top:12px; line-height:1.5}
-.dcta{position:sticky; bottom:0; background:color-mix(in srgb,var(--bg) 92%,transparent); backdrop-filter:blur(8px); border-top:1px solid var(--border-soft); padding:12px 20px; display:flex; gap:10px}
+.dcta{position:sticky; bottom:0; background:color-mix(in srgb,var(--bg) 92%,transparent); backdrop-filter:blur(8px); border-top:1px solid var(--border-soft); padding:12px 28px calc(12px + env(safe-area-inset-bottom)); display:flex; gap:10px}
 .dcta .btn{flex:1}
 .log-note{font-size:12px; color:var(--ink-faint); text-align:center; margin-top:2px}
 
@@ -497,6 +497,9 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
 }
 @media (max-width:360px){
   .grid,.sgrid{grid-template-columns:1fr}
+  .sheet .hero{padding-left:20px; padding-right:20px}
+  .dbody{padding-left:20px; padding-right:20px}
+  .dcta{padding-left:20px; padding-right:20px}
 }
 </style>
 </head>
@@ -559,7 +562,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609111639</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609111647</div><!--BUILD_END-->
   </div>
 </main>
 
