@@ -196,6 +196,25 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .btn-waterall{margin-left:auto; border:none; background:var(--alert); color:#fff; border-radius:12px; padding:9px 13px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font-sans); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; box-shadow:0 2px 8px rgba(192,57,43,.30); transition:.15s}
 .btn-waterall:hover{background:var(--alert-deep)}
 .btn-waterall:active{transform:translateY(1px)}
+/* 澆水回饋：按鈕漣漪 + 逐株亮起 */
+.wave-ripple{position:fixed; top:0; left:0; width:16px; height:16px; margin:-8px 0 0 -8px;
+  border-radius:50%; border:2px solid var(--water); background:rgba(59,121,168,.10);
+  pointer-events:none; z-index:70; opacity:0;
+  animation:waveRip .68s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes waveRip{
+  0%{transform:translate(var(--wx),var(--wy)) scale(1); opacity:.85}
+  100%{transform:translate(var(--wx),var(--wy)) scale(24); opacity:0}
+}
+.task.watered-pulse{animation:taskPulse .52s ease both}
+@keyframes taskPulse{
+  0%{background:transparent; transform:translateY(0)}
+  30%{background:var(--water-soft); transform:translateY(2px)}
+  100%{background:transparent; transform:translateY(0)}
+}
+@media (prefers-reduced-motion:reduce){
+  .wave-ripple{display:none}
+  .task.watered-pulse{animation:none}
+}
 .btn-waterall.did{background:var(--surface-2); color:var(--ink-faint); border:1px solid var(--border-soft); box-shadow:none}
 .btn-waterall.did:hover{background:var(--surface-2)}
 .due-banner{background:var(--water-soft); border:1px solid var(--water); border-radius:16px; padding:15px 16px 16px; margin:22px 0 2px}
@@ -446,8 +465,8 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
 .toast{position:fixed; left:50%; bottom:104px; transform:translate(-50%,20px); z-index:80; background:var(--primary-deep); color:#fff; padding:11px 20px; border-radius:999px; font-size:14px; font-weight:600; box-shadow:0 8px 24px var(--shadow-lg); opacity:0; pointer-events:none; transition:.28s; display:flex; align-items:center; gap:8px}
 .toast.show{opacity:1; transform:translate(-50%,0)}
 
-.foot{text-align:center; color:var(--ink-faint); font-size:12px; padding:22px 10px 8px; line-height:1.7}
 .foot .dedi{font-family:var(--font-serif); color:var(--ink-soft); font-size:13.5px; font-style:italic}
+.foot{text-align:center; color:var(--ink-faint); font-size:12px; padding:22px 10px 8px; line-height:1.7}
 
 /* ---------- Plant photos ---------- */
 .pimg{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block}
@@ -561,9 +580,9 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   </section>
 
   <div class="foot">
-    <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
+    <div class="dedi">「一株一株慢慢來，讓這座花園一直繁花盛開。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609130915</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609131614</div><!--BUILD_END-->
   </div>
 </main>
 
@@ -1386,11 +1405,42 @@ function dueInfo(id,m){
   return {id,name:p.name,every,days:d,last,never:!last,over:d-every};
 }
 function dueList(m){ return Object.keys(STATE.garden).map(id=>dueInfo(id,m)).filter(x=>x&&x.over>=0).sort((a,b)=>b.over-a.over); }
-function waterAll(){
+function prefersReducedMotion(){
+  try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(_){ return false; }
+}
+/* 從按鈕中心擴散的水波漣漪 */
+function waterRipple(btn){
+  if(!btn || prefersReducedMotion()) return;
+  const r=btn.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  for(let i=0;i<3;i++){
+    const el=document.createElement('span');
+    el.className='wave-ripple';
+    el.style.setProperty('--wx',cx+'px');
+    el.style.setProperty('--wy',cy+'px');
+    el.style.animationDelay=(i*120)+'ms';
+    document.body.appendChild(el);
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1100+i*120);
+  }
+}
+/* 重畫後，讓每張植物卡依序亮一下，像水一株一株澆過去 */
+function pulseTasks(){
+  if(prefersReducedMotion()) return;
+  const cards=Array.prototype.slice.call(document.querySelectorAll('.view.active .task'),0,12);
+  cards.forEach(function(c,i){
+    setTimeout(function(){
+      c.classList.add('watered-pulse');
+      setTimeout(function(){ c.classList.remove('watered-pulse'); }, 560);
+    }, 140+i*130);
+  });
+}
+function waterAll(btn){
   const ids=Object.keys(STATE.garden); if(!ids.length) return;
   const t=todayStr(); let n=0;
   ids.forEach(id=>{ const g=STATE.garden[id]; const arr=g.water||(g.water=[]); if(arr[arr.length-1]!==t){ arr.push(t); n++; } });
+  waterRipple(btn);
   save(); toast(n?('已記錄全部澆水 💧 · '+n+' 種'):'今天都已經記錄過了 🌿'); refreshAll();
+  requestAnimationFrame(pulseTasks);
 }
 function dateAdd(str,n){ const p=String(str).split('-').map(Number); const d=new Date(p[0],p[1]-1,p[2]+n); return (d.getMonth()+1)+'/'+d.getDate(); }
 /* 依「今天的天氣 + 這株的需水量 + 上次澆水」給一句最直接的判斷 */
@@ -1902,7 +1952,7 @@ function init(){
     if(t.dataset.gacat){ gAdd.cat=t.dataset.gacat; renderGarden(); return; }
     if(t.dataset.remove){ removePlant(t.dataset.remove); closeSheet(); return; }
     if(t.dataset.log){ logCare(t.dataset.id,t.dataset.log); return; }
-    if(t.dataset.waterall!==undefined){ waterAll(); return; }
+    if(t.dataset.waterall!==undefined){ waterAll(t); return; }
     if(t.dataset.calexport!==undefined){ openCalendarExport(); return; }
     if(t.id==='sheetClose'||t.id==='sheetDone'){ closeSheet(); return; }
     if(t.dataset.cat){ libCat=t.dataset.cat; renderLibFilter(); renderLibrary(); return; }
