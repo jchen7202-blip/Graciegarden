@@ -563,7 +563,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609130756</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609130823</div><!--BUILD_END-->
   </div>
 </main>
 
@@ -649,6 +649,35 @@ const FORECAST={
   ]
 };
 /*FORECAST_END*/
+/* ---------- 天氣快取：開頁先用上次抓到的資料，避免先閃季節通則卡 ---------- */
+const WX_CACHE_KEY='gg.wx.cache.v1';
+function saveWxCache(){
+  try{
+    localStorage.setItem(WX_CACHE_KEY, JSON.stringify({
+      v:1, savedAt:Date.now(),
+      days:FORECAST.days, updated:FORECAST.updated, src:FORECAST.src,
+      loc:FORECAST.loc, via:FORECAST.via, now:FORECAST.now||null
+    }));
+  }catch(_){}
+}
+function loadWxCache(){
+  try{
+    const raw=localStorage.getItem(WX_CACHE_KEY); if(!raw) return false;
+    const c=JSON.parse(raw);
+    if(!c || c.v!==1 || !Array.isArray(c.days) || !c.days.length) return false;
+    const age=Date.now()-(c.savedAt||0);
+    if(age > 7*24*60*60*1000) return false;            /* 太舊就不用，走季節通則 */
+    FORECAST.days=c.days;
+    FORECAST.updated=c.updated||FORECAST.updated;
+    FORECAST.src=c.src||FORECAST.src;
+    FORECAST.loc=c.loc||FORECAST.loc;
+    FORECAST.via=c.via;
+    FORECAST.now=(age<2*60*60*1000)?(c.now||null):null; /* 「此刻」超過 2 小時就不顯示 */
+    FORECAST.live=true;
+    FORECAST.fromCache=true;
+    return true;
+  }catch(_){ return false; }
+}
 /* ---------- 即時天氣：網頁自己抓，不需任何人工更新 ---------- */
 const WX_API='https://api.open-meteo.com/v1/forecast?latitude=25.0689&longitude=121.5946'
  +'&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_probability_max'
@@ -733,6 +762,8 @@ async function liveWeather(){
     try{
       const j=await tryFetch(s.u,9000);
       applyWx(j,s.n);
+      FORECAST.fromCache=false;
+      saveWxCache();
       WX_ERR=''; WX_LOG.push(s.n+' → 成功');
       WX_FETCHING=false; WX_TRIES=0;
       try{ refreshAll(); }catch(_){}
@@ -1907,6 +1938,7 @@ function init(){
   upd();
 })();
 
+loadWxCache();
 init();
 liveWeatherTick();
 
