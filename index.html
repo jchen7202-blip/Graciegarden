@@ -563,7 +563,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，父親的花園會一直開下去。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609130823</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609130847</div><!--BUILD_END-->
   </div>
 </main>
 
@@ -1370,7 +1370,7 @@ function renderSeason(m){
      <div class="weatherline">${chips}${staleNote}</div>`;
 }
 
-/* ---------- 植株小筆記 ---------- */
+/* ---------- 澆灌施養小筆記 ---------- */
 function waterForMonth(p,m){
   const b=MONTH_BUCKET[m]; const base=WATER_BASE[p.wlevel][b];
   return {drops:base[0],fq:base[1].replace(/<br>/g,' '),note:(p.wnote&&p.wnote[m])||''};
@@ -1423,7 +1423,7 @@ function renderTodo(m){
   const ids=Object.keys(STATE.garden);
   const wrap=$('#todoWrap');
   if(ids.length===0){
-    wrap.innerHTML = `<div class="todo-head"><h3>植株小筆記</h3></div>
+    wrap.innerHTML = `<div class="todo-head"><h3>澆灌施養小筆記</h3></div>
     <div class="empty"><svg viewBox="0 0 100 100">${'<circle cx="50" cy="50" r="46" fill="var(--primary-soft)"/><path d="M50 74V40" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"/><path d="M50 44c-4-6-2-12 4-16 2 6 0 12-4 16Z" fill="var(--bloom)"/><path d="M50 54c-5-2-11 1-13 7 6 2 11-1 13-7Z" fill="var(--primary)"/><path d="M50 52c5-2 11 1 13 7-6 2-11-1-13-7Z" fill="var(--primary-deep)"/>'}</svg>
       <h3>還沒有植物</h3><p>加入 Grace 花園裡的植物，這裡就會列出每週要做的事。</p>
       <button class="btn btn-primary" data-gadd>＋ 新增植物</button></div>`;
@@ -1482,7 +1482,7 @@ function renderTodo(m){
   const headBtn = (m===now && ids.length)
     ? `<button class="btn-waterall${allWateredToday?' did':''}" data-waterall>${allWateredToday?'✓ 今天一起澆過了':'💧 記錄今天一起澆水了'}</button>`
     : '';
-  const label = m===now?'植株小筆記':`${m} 月 · 照護預覽`;
+  const label = m===now?'澆灌施養小筆記':`${m} 月 · 照護預覽`;
   wrap.innerHTML = dueBanner + allClear + `<div class="todo-head"><h3>${label}</h3><span class="count">${ids.length} 種植物</span>${headBtn}</div>
     <div class="card">${items}</div>
     ${m===now?'':'<p class="log-note" style="margin-top:10px">切換回本月即可打勾記錄澆水、施肥。</p>'}`;
