@@ -196,14 +196,27 @@ h2.section{font-family:var(--font-serif); font-weight:700; font-size:24px; line-
 .btn-waterall{margin-left:auto; border:none; background:var(--alert); color:#fff; border-radius:12px; padding:9px 13px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font-sans); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; box-shadow:0 2px 8px rgba(192,57,43,.30); transition:.15s}
 .btn-waterall:hover{background:var(--alert-deep)}
 .btn-waterall:active{transform:translateY(1px)}
-/* 澆水回饋：水滴灑落 */
+/* 照護回饋：水滴／愛心灑落 */
 .rain-layer{position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:70}
-.rain-drop{position:absolute; top:-8vh; width:var(--w); height:calc(var(--w) * 1.5);
-  border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
-  background:linear-gradient(180deg, rgba(158,203,232,.95), rgba(59,121,168,.8));
-  box-shadow:0 0 3px rgba(59,121,168,.25);
+.rain-bit{position:absolute; top:-8vh; width:var(--w); height:calc(var(--w) * var(--ratio));
   opacity:0; will-change:transform,opacity;
   animation:dropFall var(--dur) cubic-bezier(.36,.02,.62,1) var(--delay) forwards}
+.rain-bit.drop{--ratio:1.55;
+  border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
+  background:
+    radial-gradient(circle at 36% 70%, rgba(255,255,255,.9) 0 10%, rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(196,226,245,.98) 0%, rgba(120,176,214,.96) 48%, rgba(42,101,146,.92) 100%)}
+.rain-bit.heart{--ratio:.92;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 33% 28%, rgba(255,255,255,.8) 0 9%, rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, rgba(255,183,208,.98) 0%, rgba(244,124,163,.96) 52%, rgba(214,73,124,.92) 100%)}
+/* 用 SVG 遮罩切出輪廓：水滴上端收尖、愛心上緣雙弧下端收尖 */
+@supports ((-webkit-mask-image:url('')) or (mask-image:url(''))){
+  .rain-bit{border-radius:0; -webkit-mask:var(--bit-mask) no-repeat center / 100% 100%; mask:var(--bit-mask) no-repeat center / 100% 100%}
+  .rain-bit.drop{--bit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 31'%3E%3Cpath d='M10 0C10 0 9.2 2.6 7.4 6.2 5.1 10.7 2 15.6 2 20a8 8 0 0 0 16 0c0-4.4-3.1-9.3-5.4-13.8C10.8 2.6 10 0 10 0Z' fill='%23000'/%3E%3C/svg%3E")}
+  .rain-bit.heart{--bit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 28.4S1.6 19.8 1.6 10.4C1.6 5.3 5.3 1.6 9.6 1.6c2.9 0 5.1 1.6 6.4 3.6 1.3-2 3.5-3.6 6.4-3.6 4.3 0 8 3.7 8 8.8 0 9.4-14.4 18-14.4 18Z' fill='%23000'/%3E%3C/svg%3E")}
+}
 @keyframes dropFall{
   0%{transform:translate3d(0,0,0) scale(.85); opacity:0}
   14%{opacity:.95}
@@ -578,7 +591,7 @@ nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:50; background:color
   <div class="foot">
     <div class="dedi">「一株一株慢慢來，讓這座花園一直繁花盛開。」</div>
     <div style="margin-top:8px">Gracie&#39;s Garden · 照護建議整理自農業部農業知識入口網；天氣資料來自 Open-Meteo，實際情況請依植物狀態調整。植物照片為 AI 生成示意圖，僅供辨識參考。</div>
-    <!--BUILD_START--><div class="ver" id="buildVer">v.2609131619</div><!--BUILD_END-->
+    <!--BUILD_START--><div class="ver" id="buildVer">v.2609131632</div><!--BUILD_END-->
   </div>
 </main>
 
@@ -1404,32 +1417,33 @@ function dueList(m){ return Object.keys(STATE.garden).map(id=>dueInfo(id,m)).fil
 function prefersReducedMotion(){
   try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(_){ return false; }
 }
-/* 全畫面水滴灑落 */
-function waterRain(){
+/* 全畫面灑落：kind='water' 水滴、kind='fert' 粉紅愛心 */
+function careRain(kind){
   if(prefersReducedMotion()) return;
+  const heart = (kind==='fert');
   const layer=document.createElement('div');
   layer.className='rain-layer';
   layer.setAttribute('aria-hidden','true');
-  const n=26;
+  const n = heart?20:26;
   for(let i=0;i<n;i++){
     const d=document.createElement('span');
-    d.className='rain-drop';
-    const w=5+Math.random()*7;
+    d.className='rain-bit '+(heart?'heart':'drop');
+    const w = heart ? (10+Math.random()*10) : (7+Math.random()*9);
     d.style.left=(Math.random()*98).toFixed(2)+'%';
     d.style.setProperty('--w', w.toFixed(1)+'px');
-    d.style.setProperty('--dur', (0.9+Math.random()*0.35).toFixed(2)+'s');
+    d.style.setProperty('--dur', (heart?(1.15+Math.random()*0.45):(0.9+Math.random()*0.35)).toFixed(2)+'s');
     d.style.setProperty('--delay', (Math.random()*0.35).toFixed(2)+'s');
-    d.style.setProperty('--drift', ((Math.random()*2-1)*28).toFixed(0)+'px');
+    d.style.setProperty('--drift', ((Math.random()*2-1)*(heart?40:28)).toFixed(0)+'px');
     layer.appendChild(d);
   }
   document.body.appendChild(layer);
-  setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); }, 1800);
+  setTimeout(function(){ if(layer.parentNode) layer.parentNode.removeChild(layer); }, heart?2300:1800);
 }
 function waterAll(){
   const ids=Object.keys(STATE.garden); if(!ids.length) return;
   const t=todayStr(); let n=0;
   ids.forEach(id=>{ const g=STATE.garden[id]; const arr=g.water||(g.water=[]); if(arr[arr.length-1]!==t){ arr.push(t); n++; } });
-  waterRain();
+  careRain('water');
   save(); toast(n?('已記錄全部澆水 💧 · '+n+' 種'):'今天都已經記錄過了 🌿'); refreshAll();
 }
 function dateAdd(str,n){ const p=String(str).split('-').map(Number); const d=new Date(p[0],p[1]-1,p[2]+n); return (d.getMonth()+1)+'/'+d.getDate(); }
@@ -1716,7 +1730,7 @@ function openCalendarExport(){
 /* ---------- 加入 / 移除 / 紀錄 ---------- */
 function addPlant(id){ if(!STATE.garden[id]) STATE.garden[id]={added:todayStr(),water:[],fert:[]}; save(); toast('已加入「'+PLANT_BY_ID[id].name+'」🌱'); refreshAll(); }
 function removePlant(id){ delete STATE.garden[id]; save(); toast('已移出「'+PLANT_BY_ID[id].name+'」'); refreshAll(); }
-function logCare(id,type){ const g=STATE.garden[id]; if(!g) return; const arr=g[type]||(g[type]=[]); const t=todayStr(); if(arr[arr.length-1]===t){ toast(type==='water'?'今天已經記錄過澆水了 💧':'今天已經記錄過施肥了 🌿'); return; } arr.push(t); save(); toast(type==='water'?'已記錄今天澆水 💧':'已記錄今天施肥 🌿'); refreshAll(); }
+function logCare(id,type){ const g=STATE.garden[id]; if(!g) return; const arr=g[type]||(g[type]=[]); const t=todayStr(); if(arr[arr.length-1]===t){ toast(type==='water'?'今天已經記錄過澆水了 💧':'今天已經記錄過施肥了 🌿'); return; } arr.push(t); careRain(type); save(); toast(type==='water'?'已記錄今天澆水 💧':'已記錄今天施肥 🌿'); refreshAll(); }
 
 /* ---------- 辨識：拍照優先 ---------- */
 let idMode='home';   // 'home' | 'wizard'
